@@ -7,8 +7,8 @@ type
     ImedMode,
     Imed8Mode,
     AbsMode,
-    AbsXMode,
-    AbsYMode,
+    RelXMode,
+    RelYMode,
     RegMode,
   
   VM = object
@@ -40,7 +40,7 @@ macro ops(body: untyped): untyped =
       case $def[0][i]
       of "NilMode", "RegMode": sizeData.add newLit(1)
       of "ImedMode", "AbsMode": sizeData.add newLit(3)
-      of "Imed8Mode", "AbsXMode", "AbsYMode": sizeData.add newLit(2)
+      of "Imed8Mode", "RelXMode", "RelYMode": sizeData.add newLit(2)
       
       modeData.add def[0][i]
       instrData.add newProc(params = [newEmptyNode(),
@@ -56,23 +56,30 @@ macro ops(body: untyped): untyped =
 ops:
   (NilMode): discard
   
-  (ImedMode): vm.a = vm.read16(arg)
-  (Imed8Mode): vm.a = vm.read8(arg)
-  (AbsMode, AbsXMode, AbsYMode): vm.a = vm.mem[arg]
-  (AbsMode, AbsXMode, AbsYMode): vm.mem[arg] = vm.a
+  (ImedMode, Imed8Mode): vm.a = arg
+  (AbsMode, RelXMode, RelYMode): vm.a = vm.mem[arg]
+  (AbsMode, RelXMode, RelYMode): vm.mem[arg] = vm.a
+  (ImedMode, Imed8Mode): vm.a += arg
+  (AbsMode, RelXMode, RelYMode): vm.a += vm.mem[arg]
+  (ImedMode, Imed8Mode): vm.a -= arg
+  (AbsMode, RelXMode, RelYMode): vm.a -= vm.mem[arg]
+  (ImedMode, Imed8Mode): vm.a *= arg
+  (AbsMode, RelXMode, RelYMode): vm.a *= vm.mem[arg]
+  (ImedMode, Imed8Mode): vm.a /= arg
+  (AbsMode, RelXMode, RelYMode): vm.a /= vm.mem[arg]
+  (RegMode): inc vm.a
+  (RegMode): dec vm.a
   
-  (ImedMode): vm.x = vm.read16(arg)
-  (Imed8Mode): vm.x = vm.read8(arg)
-  (AbsMode, AbsYMode): vm.x = vm.mem[arg]
-  (AbsMode, AbsYMode): vm.mem[arg] = vm.x
+  (ImedMode, Imed8Mode): vm.x = arg
+  (AbsMode, RelYMode): vm.x = vm.mem[arg]
+  (AbsMode, RelYMode): vm.mem[arg] = vm.x
   
-  (ImedMode): vm.y = vm.read16(arg)
-  (Imed8Mode): vm.y = vm.read8(arg)
-  (AbsMode, AbsXMode): vm.y = vm.mem[arg]
-  (AbsMode, AbsXMode): vm.mem[arg] = vm.y
+  (ImedMode, Imed8Mode): vm.y = arg
+  (AbsMode, RelXMode): vm.y = vm.mem[arg]
+  (AbsMode, RelXMode): vm.mem[arg] = vm.y
   
-  (AbsMode, AbsXMode, AbsYMode): inc vm.mem[arg]
-  (AbsMode, AbsXMode, AbsYMode): dec vm.mem[arg]
+  (AbsMode, RelXMode, RelYMode): inc vm.mem[arg]
+  (AbsMode, RelXMode, RelYMode): dec vm.mem[arg]
 
 proc step(vm: var VM) =
   let
@@ -80,22 +87,10 @@ proc step(vm: var VM) =
     arg =
       case opMode[opcode]
       of NilMode, RegMode: 0'u16
-      of ImedMode, Imed8Mode: vm.pc+1
-      of AbsMode: vm.read16(vm.pc+1)
-      of AbsXMode: vm.x + vm.read8(vm.pc+1)
-      of AbsYMode: vm.y + vm.read8(vm.pc+1)
+      of ImedMode, AbsMode: vm.read16(vm.pc+1)
+      of Imed8Mode: vm.read8(vm.pc+1)
+      of RelXMode: vm.x + vm.read8(vm.pc+1)
+      of RelYMode: vm.y + vm.read8(vm.pc+1)
     
   opInstr[opcode](vm, arg)
   vm.pc += opSize[opcode].uint16
-
-var vm: VM
-vm.mem[0] = 0x0245
-vm.mem[1] = 0x070F
-vm.mem[2] = 0x160F
-vm.mem[3] = 0x040F
-
-for i in 0..16:
-  vm.step()
-
-echo vm.a
-echo vm.mem
