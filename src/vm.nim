@@ -14,7 +14,7 @@ type
   VM = object
     pc: uint16
     mem: Mem
-    a, x, y: uint16
+    a, x, y, sp: uint16
 
 proc read8(vm: VM, idx: uint16): uint16 =
   let 
@@ -71,18 +71,36 @@ ops:
   (ImedMode, Imed8Mode): vm.a += arg
   (ImedMode, Imed8Mode): vm.a -= arg
   (ImedMode, Imed8Mode): vm.a *= arg
-  (ImedMode, Imed8Mode): vm.a /= arg
+  (ImedMode, Imed8Mode): vm.a = vm.a div arg
   
   (AbsMode, RelXMode, RelYMode): vm.a += vm.mem[arg]
   (AbsMode, RelXMode, RelYMode): vm.a -= vm.mem[arg]
   (AbsMode, RelXMode, RelYMode): vm.a *= vm.mem[arg]
-  (AbsMode, RelXMode, RelYMode): vm.a /= vm.mem[arg]
+  (AbsMode, RelXMode, RelYMode): vm.a = vm.a div vm.mem[arg]
   
   (RegMode): inc vm.a
-  (RegMode): dec vm.a
+  (RegMode): inc vm.x
+  (RegMode): inc vm.y
   (AbsMode, RelXMode, RelYMode): inc vm.mem[arg]
+  
+  (RegMode): dec vm.a
+  (RegMode): dec vm.x
+  (RegMode): dec vm.y
   (AbsMode, RelXMode, RelYMode): dec vm.mem[arg]
 
+  (RegMode): vm.sp = vm.x
+  (RegMode): vm.sp = vm.y
+
+  (RegMode): vm.x = vm.sp
+  (RegMode): vm.y = vm.sp
+
+  (RegMode):
+    inc vm.sp
+    vm.mem[vm.sp] = vm.a
+  (RegMode):
+    vm.a = vm.mem[vm.sp]
+    dec vm.sp
+    
 proc step(vm: var VM) =
   let
     opcode = vm.read8(vm.pc)
