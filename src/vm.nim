@@ -57,27 +57,29 @@ ops:
   (NilMode): discard
   
   (ImedMode, Imed8Mode): vm.a = arg
-  (AbsMode, RelXMode, RelYMode): vm.a = vm.mem[arg]
-  (AbsMode, RelXMode, RelYMode): vm.mem[arg] = vm.a
-  (ImedMode, Imed8Mode): vm.a += arg
-  (AbsMode, RelXMode, RelYMode): vm.a += vm.mem[arg]
-  (ImedMode, Imed8Mode): vm.a -= arg
-  (AbsMode, RelXMode, RelYMode): vm.a -= vm.mem[arg]
-  (ImedMode, Imed8Mode): vm.a *= arg
-  (AbsMode, RelXMode, RelYMode): vm.a *= vm.mem[arg]
-  (ImedMode, Imed8Mode): vm.a /= arg
-  (AbsMode, RelXMode, RelYMode): vm.a /= vm.mem[arg]
-  (RegMode): inc vm.a
-  (RegMode): dec vm.a
-  
   (ImedMode, Imed8Mode): vm.x = arg
-  (AbsMode, RelYMode): vm.x = vm.mem[arg]
-  (AbsMode, RelYMode): vm.mem[arg] = vm.x
-  
   (ImedMode, Imed8Mode): vm.y = arg
+  
+  (AbsMode, RelXMode, RelYMode): vm.a = vm.mem[arg]
+  (AbsMode, RelYMode): vm.x = vm.mem[arg]
   (AbsMode, RelXMode): vm.y = vm.mem[arg]
+  
+  (AbsMode, RelXMode, RelYMode): vm.mem[arg] = vm.a
+  (AbsMode, RelYMode): vm.mem[arg] = vm.x
   (AbsMode, RelXMode): vm.mem[arg] = vm.y
   
+  (ImedMode, Imed8Mode): vm.a += arg
+  (ImedMode, Imed8Mode): vm.a -= arg
+  (ImedMode, Imed8Mode): vm.a *= arg
+  (ImedMode, Imed8Mode): vm.a /= arg
+  
+  (AbsMode, RelXMode, RelYMode): vm.a += vm.mem[arg]
+  (AbsMode, RelXMode, RelYMode): vm.a -= vm.mem[arg]
+  (AbsMode, RelXMode, RelYMode): vm.a *= vm.mem[arg]
+  (AbsMode, RelXMode, RelYMode): vm.a /= vm.mem[arg]
+  
+  (RegMode): inc vm.a
+  (RegMode): dec vm.a
   (AbsMode, RelXMode, RelYMode): inc vm.mem[arg]
   (AbsMode, RelXMode, RelYMode): dec vm.mem[arg]
 
